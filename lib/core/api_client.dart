@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/pasien.dart';
@@ -11,13 +10,6 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
-/// Klien REST API ke backend PHP + MySQL.
-///
-/// URL dipilih otomatis sesuai environment yang sedang dipakai:
-/// - Emulator Android : http://10.0.2.2/klinik_bidan_api
-/// - HP fisik (1 wifi) : http://<IP-komputer>/klinik_bidan_api
-/// - Desktop/web      : http://localhost/klinik_bidan_api
-/// - Hosting          : domain aslinya, idealnya https
 class ApiClient {
   static String get baseUrl {
     if (kIsWeb) return 'http://localhost/klinik_bidan_api';
@@ -38,22 +30,32 @@ class ApiClient {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'username': username, 'password': password}),
     );
+    
     final body = jsonDecode(res.body) as Map<String, dynamic>;
     if (res.statusCode != 200) {
       throw ApiException(body['message'] ?? 'Login gagal');
     }
-    return body; // {token, user}
+    return body;
   }
 
   static Future<List<Pasien>> getPasienList(String token) async {
     final res = await http.get(
       Uri.parse('$baseUrl/pasien_list.php'),
-      headers: {'Authorization': 'Bearer $token'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
     );
-    if (res.statusCode == 401)
-      // ignore: curly_braces_in_flow_control_structures
+
+    if (res.statusCode == 401) {
       throw ApiException('Sesi berakhir, silakan login ulang');
-    if (res.statusCode != 200) throw ApiException('Gagal memuat data pasien');
+    }
+
+    if (res.statusCode != 200) {
+      final body = jsonDecode(res.body);
+      throw ApiException(body['message'] ?? 'Gagal memuat data pasien');
+    }
+
     final list = jsonDecode(res.body) as List;
     return list.map((e) => Pasien.fromJson(e as Map<String, dynamic>)).toList();
   }
@@ -67,7 +69,12 @@ class ApiClient {
       },
       body: jsonEncode(p.toJson()),
     );
-    if (res.statusCode != 201) throw ApiException('Gagal menambah pasien');
+
+    // Menerima status 200 atau 201
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      final body = jsonDecode(res.body);
+      throw ApiException(body['message'] ?? 'Gagal menambah pasien');
+    }
   }
 
   static Future<void> updatePasien(String token, Pasien p) async {
@@ -79,11 +86,15 @@ class ApiClient {
       },
       body: jsonEncode(p.toJson()),
     );
-    if (res.statusCode != 200) throw ApiException('Gagal mengubah data pasien');
+
+    if (res.statusCode != 200) {
+      final body = jsonDecode(res.body);
+      throw ApiException(body['message'] ?? 'Gagal mengubah data pasien');
+    }
   }
 
   static Future<void> deletePasien(String token, int id) async {
-    final res = await http.delete(
+    final res = await http.post(
       Uri.parse('$baseUrl/pasien_delete.php'),
       headers: {
         'Content-Type': 'application/json',
@@ -91,8 +102,10 @@ class ApiClient {
       },
       body: jsonEncode({'id': id}),
     );
-    if (res.statusCode != 200)
-      // ignore: curly_braces_in_flow_control_structures
-      throw ApiException('Gagal menghapus data pasien');
+
+    if (res.statusCode != 200) {
+      final body = jsonDecode(res.body);
+      throw ApiException(body['message'] ?? 'Gagal menghapus data pasien');
+    }
   }
 }

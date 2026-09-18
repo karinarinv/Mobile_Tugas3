@@ -29,11 +29,9 @@ class _PasienListScreenState extends State<PasienListScreen> {
     });
   }
 
-  void _logout() {
-  // 1. Reset state & token di AuthProvider
+// Tambahkan atau ubah fungsi _logout di kelas State kamu:
+void _logout() { 
   context.read<AuthProvider>().logout();
-
-  // 2. Bersihkan tumpukan navigasi dan balik ke RootDecider (LoginScreen)
   Navigator.of(context).pushAndRemoveUntil(
     MaterialPageRoute(builder: (context) => const LoginScreen()),
     (route) => false,
@@ -41,58 +39,86 @@ class _PasienListScreenState extends State<PasienListScreen> {
 }
 
   Future<void> _formDialog({Pasien? existing}) async {
-    final namaCtrl = TextEditingController(text: existing?.nama ?? '');
-    final ketCtrl = TextEditingController(text: existing?.keterangan ?? '');
+  final namaCtrl = TextEditingController(text: existing?.nama ?? '');
+  final ketCtrl = TextEditingController(text: existing?.keterangan ?? '');
 
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(existing == null ? 'Tambah Pasien' : 'Ubah Pasien'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: namaCtrl,
-              decoration: const InputDecoration(labelText: 'Nama Pasien'),
-            ),
-            TextField(
-              controller: ketCtrl,
-              decoration: const InputDecoration(labelText: 'Keterangan'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (dialogCtx) => AlertDialog(
+      title: Text(existing == null ? 'Tambah Pasien' : 'Ubah Pasien'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: namaCtrl,
+            decoration: const InputDecoration(labelText: 'Nama Pasien'),
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Simpan'),
+          TextField(
+            controller: ketCtrl,
+            decoration: const InputDecoration(labelText: 'Keterangan'),
           ),
         ],
       ),
-    );
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogCtx, false),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(dialogCtx, true),
+          child: const Text('Simpan'),
+        ),
+      ],
+    ),
+  );
 
-    if (ok != true || namaCtrl.text.trim().isEmpty) return;
+  if (ok != true || namaCtrl.text.trim().isEmpty) return;
 
-    final token = context.read<AuthProvider>().token!;
-    final p = Pasien(id: existing?.id, nama: namaCtrl.text.trim(), keterangan: ketCtrl.text.trim());
-    try {
-      if (existing == null) {
-        await ApiClient.createPasien(token, p);
-      } else {
-        await ApiClient.updatePasien(token, p);
-      }
-      _fetchData();
-    } on ApiException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
-      }
+  final token = context.read<AuthProvider>().token ?? '';
+  final p = Pasien(
+    id: existing?.id,
+    nama: namaCtrl.text.trim(),
+    keterangan: ketCtrl.text.trim(),
+  );
+
+  // Tampilkan indikator loading agar UI tidak terasa nge-freeze
+  if (!mounted) return;
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
+
+  try {
+    if (existing == null) {
+      await ApiClient.createPasien(token, p);
+    } else {
+      await ApiClient.updatePasien(token, p);
+    }
+
+    if (mounted) {
+      Navigator.pop(context); // Tutup loading indicator
+      _fetchData(); // Refresh list pasien
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data berhasil disimpan')),
+      );
+    }
+  } on ApiException catch (e) {
+    if (mounted) {
+      Navigator.pop(context); // Tutup loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      Navigator.pop(context); // Tutup loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Terjadi kesalahan: $e')),
+      );
     }
   }
+}
 
   Future<void> _hapus(Pasien p) async {
     final confirm = await showDialog<bool>(
