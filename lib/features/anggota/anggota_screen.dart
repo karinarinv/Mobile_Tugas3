@@ -6,10 +6,10 @@ class AnggotaScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const anggota = [
-      ['Aleyda Azkia Firani M.', 'NIM 22081010… · UI/UX & Frontend'],
-      ['Anggota Kelompok 2', 'NIM 22081010… · Database & Backend'],
-      ['Anggota Kelompok 3', 'NIM 22081010… · Fitur Konversi & Laporan'],
-      ['Anggota Kelompok 4', 'NIM 22081010… · Pengujian & Dokumentasi'],
+      ['Putri Karina Tumanggor.', 'NIM 124240047'],
+      ['Rachma Alycia Nugrahanto', 'NIM 124240072'],
+      ['Flavia Domitilla Alva Anggita', 'NIM 124240123 '],
+      ['Aleyda Azkia Firani Masyithah', 'NIM 124240130'],
     ];
     return Scaffold(
       appBar: AppBar(title: const Text('Daftar Anggota Kelompok')),
