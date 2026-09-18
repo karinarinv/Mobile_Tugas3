@@ -43,6 +43,7 @@ class _PasienListScreenState extends State<PasienListScreen> {
     );
     if (ok != true || namaCtrl.text.trim().isEmpty) return;
 
+    // ignore: use_build_context_synchronously
     final token = context.read<AuthProvider>().token!;
     final p = Pasien(id: existing?.id, nama: namaCtrl.text.trim(), keterangan: ketCtrl.text.trim());
     try {
@@ -71,6 +72,7 @@ class _PasienListScreenState extends State<PasienListScreen> {
     );
     if (confirm != true) return;
 
+    // ignore: use_build_context_synchronously
     final token = context.read<AuthProvider>().token!;
     try {
       await ApiClient.deletePasien(token, p.id!);

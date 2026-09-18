@@ -51,6 +51,7 @@ class ApiClient {
       headers: {'Authorization': 'Bearer $token'},
     );
     if (res.statusCode == 401)
+      // ignore: curly_braces_in_flow_control_structures
       throw ApiException('Sesi berakhir, silakan login ulang');
     if (res.statusCode != 200) throw ApiException('Gagal memuat data pasien');
     final list = jsonDecode(res.body) as List;
@@ -91,6 +92,7 @@ class ApiClient {
       body: jsonEncode({'id': id}),
     );
     if (res.statusCode != 200)
+      // ignore: curly_braces_in_flow_control_structures
       throw ApiException('Gagal menghapus data pasien');
   }
 }

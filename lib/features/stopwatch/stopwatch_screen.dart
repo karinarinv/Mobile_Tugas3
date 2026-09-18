@@ -1,51 +1,88 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
-/// Stopwatch memakai dart:core Stopwatch sebagai sumber waktu -
-/// Timer.periodic HANYA dipakai untuk memicu redraw tampilan setiap
-/// 100ms, bukan sebagai penghitung waktu itu sendiri. Ini mencegah
-/// drift/melenceng yang muncul kalau waktu dihitung dengan menambah
-/// counter di tiap tick timer.
 class StopwatchScreen extends StatefulWidget {
   const StopwatchScreen({super.key});
+
   @override
   State<StopwatchScreen> createState() => _StopwatchScreenState();
 }
 
 class _StopwatchScreenState extends State<StopwatchScreen> {
-  final _sw = Stopwatch();
+  final Stopwatch _sw = Stopwatch();
   Timer? _ticker;
-  final List<Duration> _laps = [];
 
-  void _start() {
-    _sw.start();
-    _ticker ??= Timer.periodic(const Duration(milliseconds: 100), (_) => setState(() {}));
+  final List<Duration> _laps = [];
+  int demoStartHour = 1;
+  int demoStartSecond = 2;
+  int demoStartMinutes = 3; //ganti startnya
+
+  Duration get initialTime {
+    return Duration(
+      hours: demoStartHour,
+      minutes: demoStartMinutes,
+      seconds: demoStartSecond,
+    );
   }
 
-  void _pause() => setState(() => _sw.stop());
+  Duration get currentTime {
+    return initialTime + _sw.elapsed;
+  }
+
+  void _start() {
+    if (!_sw.isRunning) {
+      _sw.start();
+    }
+
+    _ticker ??= Timer.periodic(
+      const Duration(milliseconds: 100),
+      (_) {
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
+
+    setState(() {});
+  }
+
+  void _pause() {
+    _sw.stop();
+    setState(() {});
+  }
 
   void _reset() {
     _sw
       ..stop()
       ..reset();
+
     _laps.clear();
+
     setState(() {});
   }
 
   void _lap() {
-    if (_sw.elapsed.inMilliseconds > 0) {
-      setState(() => _laps.insert(0, _sw.elapsed));
+    if (_sw.elapsedMilliseconds > 0) {
+      setState(() {
+        _laps.insert(0, currentTime);
+      });
     }
   }
 
-  String _fmt(Duration d) {
-    String two(int n) => n.toString().padLeft(2, '0');
-    final h = d.inHours;
-    final m = d.inMinutes % 60;
-    final s = d.inSeconds % 60;
-    final ds = (d.inMilliseconds % 1000) ~/ 100;
-    return '${two(h)}:${two(m)}:${two(s)}.$ds';
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+    final seconds = duration.inSeconds % 60;
+    final tenths = (duration.inMilliseconds % 1000) ~/ 100;
+
+    String twoDigits(int value) {
+      return value.toString().padLeft(2, '0');
+    }
+
+    return '${twoDigits(hours)}:'
+        '${twoDigits(minutes)}:'
+        '${twoDigits(seconds)}.'
+        '$tenths';
   }
 
   @override
@@ -57,47 +94,108 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Stopwatch Kontraksi')),
+      appBar: AppBar(
+        title: const Text('Stopwatch Kontraksi'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            const SizedBox(height: 24),
+            const SizedBox(height: 30),
+
+            // =========================
+            // DISPLAY STOPWATCH
+            // =========================
             Text(
-              _fmt(_sw.elapsed),
+              _formatDuration(currentTime),
               style: const TextStyle(
                 fontSize: 40,
                 fontWeight: FontWeight.bold,
-                fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
+
             const SizedBox(height: 8),
-            const Text('Ukur durasi dan jarak antar kontraksi', style: TextStyle(fontSize: 11, color: Colors.grey)),
-            const SizedBox(height: 20),
-            Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: [
-              FilledButton(onPressed: _start, child: const Text('Mulai')),
-              FilledButton(
+
+            const Text(
+              'Ukur durasi dan jarak antar kontraksi',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // =========================
+            // BUTTON
+            // =========================
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
+                FilledButton(
+                  onPressed: _start,
+                  child: const Text('Mulai'),
+                ),
+                FilledButton(
                   onPressed: _pause,
-                  style: FilledButton.styleFrom(backgroundColor: Colors.amber.shade700),
-                  child: const Text('Jeda')),
-              FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.amber,
+                  ),
+                  child: const Text('Jeda'),
+                ),
+                FilledButton(
                   onPressed: _lap,
-                  style: FilledButton.styleFrom(backgroundColor: Colors.pink.shade700),
-                  child: const Text('Catat')),
-              OutlinedButton(onPressed: _reset, child: const Text('Reset')),
-            ]),
-            const SizedBox(height: 16),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.pink,
+                  ),
+                  child: const Text('Catat'),
+                ),
+                OutlinedButton(
+                  onPressed: _reset,
+                  child: const Text('Reset'),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // =========================
+            // RIWAYAT KONTRAKSI
+            // =========================
             Expanded(
               child: _laps.isEmpty
-                  ? const Center(child: Text('Belum ada catatan kontraksi', style: TextStyle(color: Colors.grey)))
+                  ? const Center(
+                      child: Text(
+                        'Belum ada catatan kontraksi',
+                        style: TextStyle(
+                          color: Colors.grey,
+                        ),
+                      ),
+                    )
                   : ListView.builder(
                       itemCount: _laps.length,
-                      itemBuilder: (context, i) {
-                        final prev = i + 1 < _laps.length ? _laps[i + 1] : Duration.zero;
+                      itemBuilder: (context, index) {
+                        final current = _laps[index];
+
+                        Duration interval;
+
+                        if (index + 1 < _laps.length) {
+                          interval = current - _laps[index + 1];
+                        } else {
+                          interval = current;
+                        }
+
                         return ListTile(
                           dense: true,
-                          title: Text('Kontraksi #${_laps.length - i}'),
-                          trailing: Text('${_fmt(_laps[i])}  (+${_fmt(_laps[i] - prev)})'),
+                          title: Text(
+                            'Kontraksi #${_laps.length - index}',
+                          ),
+                          trailing: Text(
+                            '${_formatDuration(current)} '
+                            '(+${_formatDuration(interval)})',
+                          ),
                         );
                       },
                     ),
