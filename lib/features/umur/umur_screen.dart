@@ -15,7 +15,7 @@ class _UmurScreenState extends State<UmurScreen> {
 
   Future<void> _pick() async {
     final now = DateTime.now();
-    final date = await showDatePicker(context: context, initialDate: now, firstDate: DateTime(1990), lastDate: now);
+    final date = await showDatePicker(context: context, initialDate: now, firstDate: DateTime(1000), lastDate: now);
     if (date == null || !mounted) return;
     final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(now));
     if (time == null) return;

@@ -18,7 +18,7 @@ class _KalenderScreenState extends State<KalenderScreen> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _tanggal,
-      firstDate: DateTime(1900),
+      firstDate: DateTime(1000),
       lastDate: DateTime(2100),
     );
     if (picked != null) setState(() => _tanggal = picked);

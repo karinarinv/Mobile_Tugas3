@@ -76,13 +76,8 @@ class _PasienListScreenState extends State<PasienListScreen> {
 
     if (ok != true || namaCtrl.text.trim().isEmpty) return;
 
-    final token = context.read<AuthProvider>().token ?? '';
-    final p = Pasien(
-      id: existing?.id,
-      nama: namaCtrl.text.trim(),
-      keterangan: ketCtrl.text.trim(),
-    );
-
+    final token = context.read<AuthProvider>().token!;
+    final p = Pasien(id: existing?.id, nama: namaCtrl.text.trim(), keterangan: ketCtrl.text.trim());
     try {
       if (existing == null) {
         await ApiClient.createPasien(token, p);
@@ -120,7 +115,7 @@ class _PasienListScreenState extends State<PasienListScreen> {
 
     if (confirm != true || p.id == null) return;
 
-    final token = context.read<AuthProvider>().token ?? '';
+    final token = context.read<AuthProvider>().token!;
     try {
       await ApiClient.deletePasien(token, p.id!);
       _fetchData();
