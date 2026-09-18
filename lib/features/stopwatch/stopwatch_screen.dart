@@ -13,9 +13,10 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
   Timer? _ticker;
 
   final List<Duration> _laps = [];
-  int demoStartHour = 1;
-  int demoStartSecond = 2;
-  int demoStartMinutes = 3; //ganti startnya
+  int demoStartHour = 0;
+  int demoStartMinutes = 0;
+  int demoStartSecond = 0;
+   //ganti startnya
 
   Duration get initialTime {
     return Duration(

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import '../models/pasien.dart';
+import 'package:klinik_bidan/models/pasien.dart';
 
 class ApiException implements Exception {
   final String message;
