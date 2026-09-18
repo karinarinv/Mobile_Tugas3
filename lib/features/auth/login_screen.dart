@@ -16,20 +16,31 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _error;
 
   Future<void> _submit() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      await context.read<AuthProvider>().login(_userCtrl.text.trim(), _passCtrl.text);
-    } on ApiException catch (e) {
-      setState(() => _error = e.message);
-    } catch (_) {
-      setState(() => _error = 'Tidak dapat terhubung ke server. Cek baseUrl di api_client.dart.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
+  setState(() {
+    _loading = true;
+    _error = null;
+  });
+
+  try {
+    // 1. Eksekusi Login API
+    await context.read<AuthProvider>().login(
+      _userCtrl.text.trim(), 
+      _passCtrl.text,
+    );
+
+    // 2. Berpindah ke HomeScreen jika login berhasil
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/home'); // Sesuaikan dengan route home kamu
     }
+  } on ApiException catch (e) {
+    setState(() => _error = e.message);
+  } catch (e) {
+    // Tampilkan pesan error koneksi
+    setState(() => _error = 'Tidak dapat terhubung ke server. Cek baseUrl di api_client.dart.');
+  } finally {
+    if (mounted) setState(() => _loading = false);
   }
+}
 
   @override
   void dispose() {
