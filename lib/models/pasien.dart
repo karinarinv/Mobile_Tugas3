@@ -1,32 +1,43 @@
 class Pasien {
   final int? id;
   final String nama;
-  final DateTime? tanggalLahir;
-  final DateTime? hpht;
+  final String? tanggalLahir;
+  final String? noHp;
+  final String? alamat;
+  final String? hpht;
   final String? keterangan;
 
   Pasien({
     this.id,
     required this.nama,
     this.tanggalLahir,
+    this.noHp,
+    this.alamat,
     this.hpht,
     this.keterangan,
   });
 
-  factory Pasien.fromJson(Map<String, dynamic> j) => Pasien(
-        id: j['id'] is int ? j['id'] as int : int.tryParse('${j['id']}'),
-        nama: j['nama'] ?? '',
-        tanggalLahir:
-            j['tanggal_lahir'] != null ? DateTime.tryParse(j['tanggal_lahir']) : null,
-        hpht: j['hpht'] != null ? DateTime.tryParse(j['hpht']) : null,
-        keterangan: j['keterangan'],
-      );
+  factory Pasien.fromJson(Map<String, dynamic> json) {
+    return Pasien(
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      nama: json['nama']?.toString() ?? '',
+      tanggalLahir: json['tanggal_lahir']?.toString(),
+      noHp: json['no_hp']?.toString(),
+      alamat: json['alamat']?.toString(),
+      hpht: json['hpht']?.toString(),
+      keterangan: json['keterangan']?.toString(),
+    );
+  }
 
-  Map<String, dynamic> toJson() => {
-        if (id != null) 'id': id,
-        'nama': nama,
-        'tanggal_lahir': tanggalLahir?.toIso8601String().split('T').first,
-        'hpht': hpht?.toIso8601String().split('T').first,
-        'keterangan': keterangan,
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id,
+      'nama': nama,
+      'tanggal_lahir': tanggalLahir,
+      'no_hp': noHp,
+      'alamat': alamat,
+      'hpht': hpht,
+      'keterangan': keterangan,
+    };
+  }
 }

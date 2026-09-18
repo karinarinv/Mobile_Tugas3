@@ -70,10 +70,11 @@ class ApiClient {
       body: jsonEncode(p.toJson()),
     );
 
-    // Menerima status 200 atau 201
-    if (res.statusCode != 200 && res.statusCode != 201) {
-      final body = jsonDecode(res.body);
-      throw ApiException(body['message'] ?? 'Gagal menambah pasien');
+    final data = jsonDecode(res.body);
+
+    if ((res.statusCode != 200 && res.statusCode != 201) || 
+        data['status'] != 'success') {
+      throw ApiException(data['message'] ?? 'Gagal menambah data pasien');
     }
   }
 
@@ -87,9 +88,10 @@ class ApiClient {
       body: jsonEncode(p.toJson()),
     );
 
-    if (res.statusCode != 200) {
-      final body = jsonDecode(res.body);
-      throw ApiException(body['message'] ?? 'Gagal mengubah data pasien');
+    final data = jsonDecode(res.body);
+
+    if (res.statusCode != 200 || data['status'] != 'success') {
+      throw ApiException(data['message'] ?? 'Gagal memperbarui data pasien');
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart'; // Jika menggunakan intl untuk format tanggal
 import '../../core/api_client.dart';
 import '../../core/app_theme.dart';
 import '../../core/auth_provider.dart';
@@ -39,26 +40,78 @@ class _PasienListScreenState extends State<PasienListScreen> {
 
   Future<void> _formDialog({Pasien? existing}) async {
     final namaCtrl = TextEditingController(text: existing?.nama ?? '');
+    final tglLahirCtrl = TextEditingController(text: existing?.tanggalLahir ?? '');
+    final noHpCtrl = TextEditingController(text: existing?.noHp ?? '');
+    final alamatCtrl = TextEditingController(text: existing?.alamat ?? '');
+    final hphtCtrl = TextEditingController(text: existing?.hpht ?? '');
     final ketCtrl = TextEditingController(text: existing?.keterangan ?? '');
+
+    // Helper fungsi DatePicker
+    Future<void> pickDate(TextEditingController controller) async {
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime(1950),
+        lastDate: DateTime(2100),
+      );
+      if (picked != null) {
+        controller.text = DateFormat('yyyy-MM-dd').format(picked);
+      }
+    }
 
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Text(existing == null ? 'Tambah Pasien' : 'Ubah Pasien'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: namaCtrl,
-              decoration: const InputDecoration(labelText: 'Nama Pasien'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: ketCtrl,
-              decoration: const InputDecoration(labelText: 'Keterangan'),
-            ),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: namaCtrl,
+                decoration: const InputDecoration(labelText: 'Nama Pasien *'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: tglLahirCtrl,
+                readOnly: true,
+                onTap: () => pickDate(tglLahirCtrl),
+                decoration: const InputDecoration(
+                  labelText: 'Tanggal Lahir (YYYY-MM-DD)',
+                  suffixIcon: Icon(Icons.calendar_today),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: noHpCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: 'No. HP'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: alamatCtrl,
+                maxLines: 2,
+                decoration: const InputDecoration(labelText: 'Alamat'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: hphtCtrl,
+                readOnly: true,
+                onTap: () => pickDate(hphtCtrl),
+                decoration: const InputDecoration(
+                  labelText: 'HPHT (YYYY-MM-DD)',
+                  suffixIcon: Icon(Icons.calendar_month),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: ketCtrl,
+                maxLines: 2,
+                decoration: const InputDecoration(labelText: 'Keterangan'),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -79,7 +132,11 @@ class _PasienListScreenState extends State<PasienListScreen> {
     final p = Pasien(
       id: existing?.id,
       nama: namaCtrl.text.trim(),
-      keterangan: ketCtrl.text.trim(),
+      tanggalLahir: tglLahirCtrl.text.trim().isEmpty ? null : tglLahirCtrl.text.trim(),
+      noHp: noHpCtrl.text.trim().isEmpty ? null : noHpCtrl.text.trim(),
+      alamat: alamatCtrl.text.trim().isEmpty ? null : alamatCtrl.text.trim(),
+      hpht: hphtCtrl.text.trim().isEmpty ? null : hphtCtrl.text.trim(),
+      keterangan: ketCtrl.text.trim().isEmpty ? null : ketCtrl.text.trim(),
     );
 
     if (!mounted) return;
@@ -291,7 +348,10 @@ class _PasienListScreenState extends State<PasienListScreen> {
                                   p.nama,
                                   style: const TextStyle(fontWeight: FontWeight.w700, color: KlinikBidanPalette.textPrimary),
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 4),
+                                if (p.hpht != null && p.hpht!.isNotEmpty)
+                                  Text('HPHT: ${p.hpht}', style: const TextStyle(fontSize: 12, color: KlinikBidanPalette.textSecondary)),
+                                const SizedBox(height: 2),
                                 Text(
                                   p.keterangan == null || p.keterangan!.isEmpty ? 'Belum ada keterangan' : p.keterangan!,
                                   style: const TextStyle(color: KlinikBidanPalette.textSecondary, fontSize: 12),
